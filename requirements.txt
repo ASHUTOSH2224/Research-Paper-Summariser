@@ -1,0 +1,7 @@
+slack-bolt
+feedparser
+requests
+apscheduler
+python-dotenv
+openai
+google-generativeai
