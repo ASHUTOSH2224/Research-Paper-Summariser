@@ -11,28 +11,34 @@ summarizer = Summarizer()
 def handle_summarize(ack, respond, command):
     """
     Handle /summarize <url> command.
+    Downloads the PDF and provides a summary.
     """
     ack()
     url = command['text'].strip()
     
     if not url:
-        respond("Please provide a URL to summarize. Usage: `/summarize <url>`")
+        respond("Please provide an arXiv URL to summarize. Usage: `/summarize <arxiv_url>`")
         return
 
-    respond(f"Fetching and summarizing {url}...")
+    # Validate it's an arXiv URL
+    if 'arxiv.org' not in url:
+        respond("Please provide a valid arXiv URL (e.g., https://arxiv.org/abs/1706.03762)")
+        return
+
+    respond(f":hourglass: Fetching and summarizing paper from {url}... This may take a moment.")
     
-    # Ideally, we would fetch the paper content here. 
-    # For this MVP, we will try to pass the URL to the summarizer or create a minimal paper object.
-    # Future improvement: Add 'fetch_paper_from_url' in monitor.py
-    
-    paper = {
-        'title': 'On-Demand Request',
-        'abstract': f'Paper located at {url}',
-        'link': url
-    }
-    
-    summary = summarizer.summarize(paper)
-    respond(f"*Summary for {url}:*\n{summary}")
+    try:
+        # Create paper object - the summarizer will fetch the PDF content
+        paper = {
+            'title': 'On-Demand Request',
+            'abstract': '',
+            'link': url
+        }
+        
+        summary = summarizer.summarize(paper)
+        respond(f"*Summary for <{url}|paper>:*\n\n{summary}")
+    except Exception as e:
+        respond(f":x: Error summarizing paper: {str(e)}")
 
 def post_paper_to_slack(paper):
     """

@@ -1,6 +1,7 @@
 from openai import OpenAI
 import config
-import os
+from pdf_handler import get_paper_content
+
 
 class Summarizer:
     def __init__(self):
@@ -14,16 +15,23 @@ class Summarizer:
     def summarize(self, paper):
         """
         Summarizes a paper using the LLM (OpenAI).
+        Downloads the actual PDF and extracts content for summarization.
         """
         if not self.client:
             return "Error: No API Key configured."
 
+        # Get the actual paper content (downloads PDF and extracts text)
+        print(f"Fetching full paper content for: {paper['title']}")
+        paper_content = get_paper_content(paper)
+
         prompt = f"""
         You are an expert research assistant. Summarize the following research paper for a technical audience.
         
-        Title: {paper['title']}
-        Abstract: {paper['abstract']}
-        Link: {paper['link']}
+        Paper Title: {paper['title']}
+        
+        --- FULL PAPER CONTENT ---
+        {paper_content}
+        --- END OF PAPER ---
         
         Please provide a structured summary with the following sections. Use distinct emojis and *single asterisks* for bold headers (Slack style).
         
@@ -43,7 +51,7 @@ class Summarizer:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a helpful research assistant."},
+                    {"role": "system", "content": "You are a helpful research assistant who summarizes academic papers."},
                     {"role": "user", "content": prompt}
                 ]
             )
@@ -51,12 +59,15 @@ class Summarizer:
         except Exception as e:
             return f"Error generating summary: {e}"
 
+
 if __name__ == "__main__":
-    # Simple Test
+    # Test with a real paper
     s = Summarizer()
-    dummy_paper = {
-        'title': 'An Attention Free Transformer',
-        'abstract': 'We propose an attention free transformer architecture...',
-        'link': 'http://arxiv.org/abs/2105.14103'
+    test_paper = {
+        'title': 'Attention Is All You Need',
+        'abstract': 'The dominant sequence transduction models...',
+        'link': 'https://arxiv.org/abs/1706.03762'
     }
-    print(s.summarize(dummy_paper))
+    print("Testing summarizer with PDF content...")
+    print(s.summarize(test_paper))
+
