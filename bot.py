@@ -51,10 +51,17 @@ def post_paper_to_slack(paper):
     print(f"Summarizing and posting: {paper['title']}")
     summary = summarizer.summarize(paper)
     
+    # Generate PDF URL from abstract URL
+    pdf_url = paper['link'].replace('/abs/', '/pdf/') + '.pdf'
+    
     try:
         # Use simple text format for maximum width (Native Slack look)
-        # Title as Bold, followed by summary, followed by link
-        message_text = f"*{paper['title']}*\n\n{summary}\n\n<{paper['link']}|View Original Paper>"
+        # Title as Bold, followed by summary, followed by links
+        message_text = (
+            f"*{paper['title']}*\n\n"
+            f"{summary}\n\n"
+            f":page_facing_up: <{pdf_url}|Download PDF>  •  <{paper['link']}|View on arXiv>"
+        )
 
         app.client.chat_postMessage(
             channel=config.SLACK_CHANNEL_ID,
@@ -63,3 +70,4 @@ def post_paper_to_slack(paper):
         )
     except Exception as e:
         print(f"Failed to post to Slack: {e}")
+
